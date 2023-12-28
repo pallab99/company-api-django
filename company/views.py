@@ -4,6 +4,7 @@ from django.http import Http404
 from base.responseMessage import RESPONSE_MESSAGE
 from .models import Company
 from .serializers import CompanySerializer
+from rest_framework.decorators import action
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
@@ -53,3 +54,22 @@ class CompanyViewSet(viewsets.ModelViewSet):
             {"message": "Company deleted successfully",
                 "status": response.status_code},
         )
+
+    @action(detail=True, methods=["PATCH"], name="Toggle company status")
+    def update_status(self, request, pk=None):
+        try:
+            companyObject = Company.objects.get(pk=pk)
+            print("Update status", companyObject)
+            companyObject.active = not companyObject.active
+            serializer = CompanySerializer(companyObject)
+            companyObject.save()
+            return Response(
+                {"success": True, "message": "Company status updated successfully", "data": serializer.data})
+
+        except AttributeError as e:
+            return Response(
+                {"success": False, "message": "Internal Server Error", "error": str(e)})
+
+        except Exception as e:
+            return Response(
+                {"success": False, "message": "Internal Server Error", "error": str(e)})
